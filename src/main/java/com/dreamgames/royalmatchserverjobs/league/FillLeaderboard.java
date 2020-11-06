@@ -1,6 +1,7 @@
 package com.dreamgames.royalmatchserverjobs.league;
 
 import com.dreamgames.royalmatchserverjobs.db.DBConnectionManager;
+import com.dreamgames.royalmatchserverjobs.redis.RedisManager;
 import com.dreamgames.royalmatchserverjobs.util.Tuple;
 import com.dreamgames.royalmatchserverjobs.util.UtilHelper;
 import com.google.common.collect.Maps;
@@ -26,7 +27,7 @@ public class FillLeaderboard {
 
         usLeaderboard.forEach((key, value) -> leaderboard.put(key, value));
 
-        System.err.println(leaderboard);
+        RedisManager.fillLeaderboard(leaderboard);
 
     }
 

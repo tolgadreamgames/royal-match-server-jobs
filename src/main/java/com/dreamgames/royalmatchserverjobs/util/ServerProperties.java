@@ -6,11 +6,13 @@ import java.util.Properties;
 
 public class ServerProperties {
     private static Properties properties;
+    public static boolean IS_DEV = false;
 
     public static void init(String propertiesPath) throws IOException {
         properties = new Properties();
         var inputStream = new FileInputStream(propertiesPath);
         properties.load(inputStream);
+        IS_DEV = getBoolean("server.is_dev");
     }
 
     public static String getString(String key) {
