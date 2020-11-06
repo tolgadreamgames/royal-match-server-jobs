@@ -38,6 +38,9 @@ public class FillLeaderboard {
 
         usLeaderboard.forEach((key, value) -> leaderboard.put(key, value));
 
+        leaderboard.put("WORLD", getNonLeagueLeaderboardForWorld());
+        System.err.println("Got leaderboard for world");
+
         RedisManager.fillLeaderboard(leaderboard);
         System.err.println("Fill leaderboard operation is completed");
 
@@ -118,6 +121,27 @@ public class FillLeaderboard {
 
         try(Connection con = DBConnectionManager.getReadonlyConnection();
             PreparedStatement pst = con.prepareStatement(query);
+            ResultSet rs = pst.executeQuery()) {
+
+            while(rs.next()) {
+                leaderboard.add(
+                        new Tuple<>(rs.getLong("user_id"),
+                                UtilHelper.wrapScoreWithDate(rs.getInt("level"), rs.getTimestamp("last_level_update_date").getTime())));
+            }
+        }catch (Exception e) {
+            e.printStackTrace();
+            System.exit(1);
+        }
+
+        return leaderboard;
+    }
+
+    private static String GET_NON_LEAGUE_TOP_USERS_FOR_WORLD = "SELECT user_id, level, last_level_update_date FROM users  ORDER BY level DESC, last_level_update_date LIMIT " + LEADERBOARD_SIZE;
+    private static List<Tuple<Long, Double>> getNonLeagueLeaderboardForWorld() throws Exception {
+        List<Tuple<Long, Double>> leaderboard = new ArrayList<>();
+
+        try(Connection con = DBConnectionManager.getReadonlyConnection();
+            PreparedStatement pst = con.prepareStatement(GET_NON_LEAGUE_TOP_USERS_FOR_WORLD);
             ResultSet rs = pst.executeQuery()) {
 
             while(rs.next()) {
