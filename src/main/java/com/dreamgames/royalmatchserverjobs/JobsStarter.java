@@ -6,10 +6,9 @@ import com.dreamgames.royalmatchserverjobs.util.ServerProperties;
 
 public class JobsStarter {
     public static void main(String[] args) throws Exception {
-
         var propertiesFilePath = System.getenv().get("PROPERTIES_PATH");
         ServerProperties.init(propertiesFilePath);
         DBConnectionManager.init();
-        FillLeaderboard.getLeaguesData();
+        FillLeaderboard.process();
     }
 }
