@@ -8,7 +8,6 @@ import com.google.common.collect.Maps;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -19,11 +18,13 @@ public class FillLeaderboard {
     private static final List<String> activeCountries = new ArrayList<>(Arrays.asList("TR", "GB"));
 
 
-
     //TODO US state içinde ayrı çek
     public static void process() throws Exception {
         var leaderboard = getNonLeagueLeaderboardByCountry();
         leaderboard.put("LOCAL", getNonLeagueLeaderboardForLocal());
+        var usLeaderboard = getNonLeagueLeaderboardForUsStates();
+
+        usLeaderboard.forEach((key, value) -> leaderboard.put(key, value));
 
         System.err.println(leaderboard);
 
@@ -34,6 +35,9 @@ public class FillLeaderboard {
         Map<String, List<Tuple<Long, Double>>> map = Maps.newHashMap();
 
         for (String activeCountry : activeCountries) {
+            if(activeCountry.equalsIgnoreCase("US")) {
+                continue;
+            }
             final String country = activeCountry;
             map.put(country, new ArrayList<>());
             ResultSet rs = null;
@@ -44,7 +48,7 @@ public class FillLeaderboard {
                 rs = pst.executeQuery();
                 while(rs.next()) {
                     map.get(rs.getString("country")).add(
-                            new Tuple<Long, Double>(rs.getLong("user_id"),
+                            new Tuple<>(rs.getLong("user_id"),
                                     UtilHelper.wrapScoreWithDate(rs.getInt("level"), rs.getTimestamp("last_level_update_date").getTime())));
                 }
             }catch (Exception e) {
@@ -53,6 +57,33 @@ public class FillLeaderboard {
             }finally {
                 rs.close();
             }
+        }
+
+        return map;
+    }
+
+    private static String GET_NON_LEAGUE_TOP_USERS_FOR_US_STATES = "SELECT user_id, level, country_state, last_level_update_date FROM users WHERE country = 'US' and country_state <> '' ORDER BY level DESC, last_level_update_date LIMIT " + LEADERBOARD_SIZE;
+    private static Map<String, List<Tuple<Long, Double>>> getNonLeagueLeaderboardForUsStates() throws Exception {
+        Map<String, List<Tuple<Long, Double>>> map = Maps.newHashMap();
+
+        try(Connection con = DBConnectionManager.getReadonlyConnection();
+            PreparedStatement pst = con.prepareStatement(GET_NON_LEAGUE_TOP_USERS_FOR_US_STATES);
+            ResultSet rs = pst.executeQuery()) {
+
+            while(rs.next()) {
+                var state = "US-" + rs.getString("country_state");
+
+                if(!map.containsKey(state)) {
+                    map.put(state, new ArrayList<>());
+                }
+
+                map.get(state).add(
+                        new Tuple<>(rs.getLong("user_id"),
+                                UtilHelper.wrapScoreWithDate(rs.getInt("level"), rs.getTimestamp("last_level_update_date").getTime())));
+            }
+        }catch (Exception e) {
+            e.printStackTrace();
+            System.exit(1);
         }
 
         return map;
@@ -78,7 +109,7 @@ public class FillLeaderboard {
 
             while(rs.next()) {
                 leaderboard.add(
-                        new Tuple<Long, Double>(rs.getLong("user_id"),
+                        new Tuple<>(rs.getLong("user_id"),
                                 UtilHelper.wrapScoreWithDate(rs.getInt("level"), rs.getTimestamp("last_level_update_date").getTime())));
             }
         }catch (Exception e) {
