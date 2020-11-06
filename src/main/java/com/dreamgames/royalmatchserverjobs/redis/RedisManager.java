@@ -14,7 +14,6 @@ public class RedisManager {
     public static void fillLeaderboard(Map<String, List<Tuple<Long, Double>>> leaderboard) {
         var expireInSeconds = (int) TimeUnit.DAYS.toSeconds(30);
 
-
         if(ServerProperties.IS_DEV) {
             var jedis = getSingleRedis();
             for(Map.Entry<String, List<Tuple<Long, Double>>> entry : leaderboard.entrySet()) {
@@ -25,6 +24,7 @@ public class RedisManager {
                 for (Tuple<Long, Double> tuple : list) {
                     jedis.zadd(key, tuple.right, String.valueOf(tuple.left));
                 }
+                System.err.println("Fill leaderboard for: " + entry.getKey());
             }
         }else {
             var jedis = getClusterRedis();

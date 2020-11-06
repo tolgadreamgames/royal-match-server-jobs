@@ -21,13 +21,25 @@ public class FillLeaderboard {
 
     //TODO US state içinde ayrı çek
     public static void process() throws Exception {
+        var stringBuilder = new StringBuilder();
+        activeCountries.forEach(ac -> stringBuilder.append(ac).append(", "));
+
+        System.err.println("Getting leaderboard for active countries: " + stringBuilder.toString());
         var leaderboard = getNonLeagueLeaderboardByCountry();
+        var sizeCountry = leaderboard.size();
+        System.err.println("Got leaderboard for active " + sizeCountry + " countries");
+
         leaderboard.put("LOCAL", getNonLeagueLeaderboardForLocal());
+        System.err.println("Got leaderboard for local");
+
         var usLeaderboard = getNonLeagueLeaderboardForUsStates();
+        var sizeUsStates = leaderboard.size() - sizeCountry - 1;
+        System.err.println("Got leaderboard for " + sizeUsStates + " us states");
 
         usLeaderboard.forEach((key, value) -> leaderboard.put(key, value));
 
         RedisManager.fillLeaderboard(leaderboard);
+        System.err.println("Fill leaderboard operation is completed");
 
     }
 
