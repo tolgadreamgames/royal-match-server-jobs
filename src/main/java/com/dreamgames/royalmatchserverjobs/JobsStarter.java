@@ -1,7 +1,7 @@
 package com.dreamgames.royalmatchserverjobs;
 
 import com.dreamgames.royalmatchserverjobs.db.DBConnectionManager;
-import com.dreamgames.royalmatchserverjobs.league.FillLeaderboard;
+import com.dreamgames.royalmatchserverjobs.leaderboard.LeaderboardManager;
 import com.dreamgames.royalmatchserverjobs.util.ServerProperties;
 
 public class JobsStarter {
@@ -9,6 +9,6 @@ public class JobsStarter {
         var propertiesFilePath = System.getenv().get("PROPERTIES_PATH");
         ServerProperties.init(propertiesFilePath);
         DBConnectionManager.init();
-        FillLeaderboard.process();
+        LeaderboardManager.process();
     }
 }
